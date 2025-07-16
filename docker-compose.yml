@@ -1,0 +1,19 @@
+services:
+  ankiweb:
+    image: lhuckaz/add-japanese-anki-web
+    container_name: ankiweb
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_APP: run.py
+      FLASK_ENV: production
+      SECRET_KEY: 'your-secret-key'
+      GOOGLE_API_KEY: 'your-google-api-key'
+      ANKICONNECT_URL: 'http://localhost:8765'
+      HANDLE_CONTAINER: true
+      PORTAINER_URL: 'http://localhost:9000'
+      PORTAINER_USERNAME: 'your-portainer-user'
+      PORTAINER_PASSWORD: 'your-portainer-password'
+      PORTAINER_ENDPOINT_ID: 1
+      PORTAINER_CONTAINER_ID: 'your-container-id'

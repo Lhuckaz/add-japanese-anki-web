@@ -1,0 +1,21 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Anki Add{% endblock %}
+
+{% block content %}
+<form id="language">
+    <input type="text" id="word" name="word" autocomplete="off" placeholder="Enter word" required
+        value="{{ word or '' }}">
+    <div class="languages" tabindex="0">
+        <div class="selected" data-value="japanese">Japanese</div>
+        <ul class="options">
+            <li data-value="japanese">Japanese</li>
+            <li data-value="english">English</li>
+        </ul>
+    </div>
+    <input type="hidden" name="dropdownValue" id="dropdownValue" value="japanese">
+    <button type="submit">Add</button>
+</form>
+
+<div id="result"></div>
+{% endblock %}
