@@ -8,7 +8,7 @@ api = Blueprint('api', __name__, url_prefix='/api')
 
 @api.route("/addnote", methods=["POST"])
 def addnote():
-  HANDLE_CONTAINER = os.environ.get('HANDLE_CONTAINER', False)
+  HANDLE_CONTAINER = os.environ.get('HANDLE_CONTAINER', 'False').lower() == 'true'
   ankiConnect = os.environ.get("ANKICONNECT_URL")
   if not ankiConnect:
     return jsonify({"error": "ANKICONNECT_URL environment variable not set"}), 500

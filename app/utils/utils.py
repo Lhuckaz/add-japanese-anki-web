@@ -5,7 +5,7 @@ import re
 import shutil
 import requests
 
-import google.generativeai as genai
+from google import genai
 from gtts import gTTS
 from googletrans import Translator
 import pykakasi
@@ -80,12 +80,10 @@ def get_sentence_with_word(word):
       A tuple containing the Japanese sentence, Romaji, and English translation.
     """
     try:
-        api_key = os.environ.get("GOOGLE_API_KEY")
-        if not api_key:
-            return "Error: GOOGLE_API_KEY environment variable not set.", None, None
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(f"Write a simple sentence in Japanese using the word '{word}'. Format: [Japanese sentence] ([Romaji]) - [English translation]")
+        client = genai.Client()
+        response = client.models.generate_content(
+            model='gemini-2.0-flash-001', contents=f"Write a simple sentence in Japanese using the word '{word}'. Format: [Japanese sentence] ([Romaji]) - [English translation]"
+        )
         text = response.text.strip()
         
         # Use regex to parse the sentence
@@ -111,13 +109,11 @@ def get_sentence_with_word_english(word):
       A tuple containing the Japanese sentence, Romaji, and English translation.
     """
     try:
-        api_key = os.environ.get("GOOGLE_API_KEY")
-        if not api_key:
-            return "Error: GOOGLE_API_KEY environment variable not set.", None, None
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(f"Write a simple sentence using the word '{word}'. Format: [English setence]")
-        text = response.text.strip()
+        client = genai.Client()
+        response = client.models.generate_content(
+            model='gemini-2.0-flash-001', contents=f"Write a simple sentence using the word '{word}'. Format: [English setence]"
+        )
+        text = response.text.strip().strip("[]")
         return text
 
     except Exception as e:
@@ -135,12 +131,10 @@ def get_definition(word):
       A tuple containing the Japanese sentence, Romaji, and English translation.
     """
     try:
-        api_key = os.environ.get("GOOGLE_API_KEY")
-        if not api_key:
-            return "Error: GOOGLE_API_KEY environment variable not set.", None, None
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(f"Give a short definition of the word '{word}'. Format: [English definition]")
+        client = genai.Client()
+        response = client.models.generate_content(
+            model='gemini-2.0-flash-001', contents=f"Give a short definition of the word '{word}'. Format: [English definition]"
+        )
         text = response.text.strip().strip("[]")
         return text
     except Exception as e:
@@ -334,7 +328,7 @@ def addnote(ankiconnect_url, deck_name, word):
         print(f"Skipping note for '{word}' due to error: {e}")
         raise e
     finally:
-        print("Empty audio folder")
+        print("Emptying audio folder...")
         empty_folder(audio_dir)
         
         
@@ -363,7 +357,7 @@ def addnote_english(ankiconnect_url, deck_name, word):
       raise Exception("Error generating sentence detected in definition or sentence")
 
     print(f"Processing '{english_word}':")
-    print(f"  Definition: {english_sentence}")
+    print(f"  Definition: {english_definition}")
     print(f"  English Sentence: {english_sentence}")
 
     # Download audio for the word
