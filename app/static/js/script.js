@@ -7,6 +7,17 @@ const wordInput = document.getElementById('word');
 const form = document.getElementById('language');
 const resultBox = document.getElementById('result');
 
+function showMessage(type, message) {
+    resultBox.classList.remove('success', 'error');
+    resultBox.classList.add(type);
+    resultBox.textContent = message;
+
+    setTimeout(() => {
+        resultBox.classList.remove('success', 'error');
+        resultBox.textContent = '';
+    }, 5000);
+}
+
 dropdown.addEventListener('click', () => {
     dropdown.classList.toggle('open');
 });
@@ -15,7 +26,7 @@ optionsList.forEach(option => {
     option.addEventListener('click', () => {
         selected.textContent = option.textContent;
         selected.dataset.value = option.dataset.value;
-        hiddenInput.value = option.dataset.value; // Update hidden input value
+        hiddenInput.value = option.dataset.value;
     });
 });
 
@@ -56,19 +67,13 @@ form.addEventListener('submit', async (e) => {
 
         const result = await res.json();
         if (!res.ok) {
-            resultBox.classList.add('error');
-            if (res.status === 500 && result.error) {
-                console.error(result.error);
-                resultBox.textContent = 'Failed to add';
-                return;
-            }
-            resultBox.textContent = 'Failed to add';
+            console.error(result?.error || 'Unknown error');
+            showMessage('error', 'Failed to add');
             return;
         }
-        resultBox.classList.add('success');
-        resultBox.textContent = result.message || 'Note added!';
+        showMessage('success', result.message || 'Note added!');
     } catch (err) {
         console.error(err);
-        resultBox.textContent = 'Error submitting note';
+        showMessage('error', 'Error submitting note');
     }
 });
