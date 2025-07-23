@@ -110,7 +110,7 @@ def get_sentence_with_word_english(word):
       word: The word to be used in the sentence.
 
     Returns:
-      A tuple containing the Japanese sentence, Romaji, and English translation.
+      A setence with the word.
     """
     try:
         client = genai.Client()
@@ -126,13 +126,13 @@ def get_sentence_with_word_english(word):
     
 def get_definition(word):
     """
-    Generates a sentence with the given word using the Gemini API.
+    Gets the definition of a word.
 
     Args:
-      word: The word to be used in the sentence.
+      word: The word.
 
     Returns:
-      A tuple containing the Japanese sentence, Romaji, and English translation.
+      A definition of the word.
     """
     try:
         client = genai.Client()
@@ -202,6 +202,7 @@ def identify_language(word):
         return "English"
 
     except:
+        logger.error(f"Language not identified")
         return "Language not identified"
 
 def download_audio(text, lang, filename):
