@@ -1,6 +1,10 @@
 import requests
 import time
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # === CONFIGURATION ===
 PORTAINER_URL = os.getenv("PORTAINER_URL", "http://localhost:9000")
@@ -24,11 +28,11 @@ def stop_container(jwt_token):
     response = requests.post(url, headers=headers)
     
     if response.status_code == 204:
-        print(f"Container '{CONTAINER_ID}' stopped successfully.")
+        logger.info(f"Container '{CONTAINER_ID}' stopped successfully.")
     elif response.status_code == 304:
-        print(f"Container '{CONTAINER_ID}' is already stopped.")
+        logger.info(f"Container '{CONTAINER_ID}' is already stopped.")
     else:
-        print(f"Failed to stop container: {response.status_code} - {response.text}")
+        logger.error(f"Failed to stop container: {response.status_code} - {response.text}")
         raise Exception(f"Failed to stop container")
         
 # === START CONTAINER ===
@@ -38,11 +42,11 @@ def start_container(jwt_token):
     response = requests.post(url, headers=headers)
 
     if response.status_code == 204:
-        print(f"Container '{CONTAINER_ID}' started successfully.")
+        logger.info(f"Container '{CONTAINER_ID}' started successfully.")
     elif response.status_code == 304:
-        print(f"Container '{CONTAINER_ID}' is already running.")
+        logger.info(f"Container '{CONTAINER_ID}' is already running.")
     else:
-        print(f"Failed to start container: {response.status_code} - {response.text}")
+        logger.error(f"Failed to start container: {response.status_code} - {response.text}")
         raise Exception(f"Failed to start container")
         
 def get_container_status(jwt_token):
@@ -58,17 +62,17 @@ def handle_container():
         token = get_jwt_token()
         status = get_container_status(token)
 
-        print(f"Current container status: {status}")
+        logger.info(f"Current container status: {status}")
 
         if status == "exited" or status == "created":
             start_container(token)
-            print(f"Waiting...")
+            logger.info(f"Waiting...")
             time.sleep(5)
         elif status == "running":
-            print(f"Container '{CONTAINER_ID}' is already running.")
+            logger.info(f"Container '{CONTAINER_ID}' is already running.")
         else:
-            print(f"Container is in an unexpected state: {status}")
+            logger.warning(f"Container is in an unexpected state: {status}")
             raise Exception(f"Container is in an unexpected state")
     except requests.RequestException as e:
-        print(f"Request failed: {e}")
+        logger.error(f"Request failed: {e}")
         raise e

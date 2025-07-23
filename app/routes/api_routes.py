@@ -1,8 +1,12 @@
 from flask import Blueprint, jsonify, request
 import os
+import logging
 from app.utils.utils import addnote as add_anki_note
 from app.utils.utils import addnote_english as add_anki_note_english
 from app.utils.container import handle_container
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
@@ -16,8 +20,8 @@ def addnote():
   data = request.get_json()
   if not data:
         return jsonify({"error": "Missing JSON data"}), 400
-  word = data.get("word")
-  dropdown_value = data.get("dropdownValue") # This is not used in the add_anki_note function, but keeping it for now.
+  word = data.get("word").strip()
+  dropdown_value = data.get("dropdownValue")
 
   if not word:
     return jsonify({"message": "Missing 'word'"}), 400

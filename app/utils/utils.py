@@ -4,11 +4,15 @@ import os
 import re
 import shutil
 import requests
+import logging
 
 from google import genai
 from gtts import gTTS
 from googletrans import Translator
 import pykakasi
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def invoke_ankiconnect(ankiconnect_url, action, **params):
     payload = {
@@ -24,11 +28,11 @@ def invoke_ankiconnect(ankiconnect_url, action, **params):
             raise Exception(f"AnkiConnect error: {result['error']}")
         return result.get("result")
     except requests.exceptions.ConnectionError as ce:
-        print(f"Error: Could not connect to AnkiConnect at {ankiconnect_url}.")
-        print("Please ensure Anki is running and AnkiConnect is installed and enabled.")
+        logger.error(f"Error: Could not connect to AnkiConnect at {ankiconnect_url}.")
+        logger.error("Please ensure Anki is running and AnkiConnect is installed and enabled.")
         raise ce
     except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
+        logger.error(f"Request failed: {e}")
         raise e
     
 def sync_ankiconnect(ankiconnect_url):
@@ -40,15 +44,15 @@ def sync_ankiconnect(ankiconnect_url):
         response = requests.post(ankiconnect_url, json=payload)
         response.raise_for_status()
         result = response.json()
-        print("Sync successful!")
+        logger.info("Sync successful!")
         if result.get("error"):
             raise Exception(f"AnkiConnect error: {result['error']}")
     except requests.exceptions.ConnectionError as ce:
-        print(f"Error: Could not connect to AnkiConnect at {ankiconnect_url}.")
-        print("Please ensure Anki is running and AnkiConnect is installed and enabled.")
+        logger.error(f"Error: Could not connect to AnkiConnect at {ankiconnect_url}.")
+        logger.error("Please ensure Anki is running and AnkiConnect is installed and enabled.")
         raise ce
     except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
+        logger.error(f"Request failed: {e}")
         raise e
 
 def upload_audio(file_path: str, ankiconnect_url: str):
@@ -57,7 +61,7 @@ def upload_audio(file_path: str, ankiconnect_url: str):
             audio_data = f.read()
         base64_audio = base64.b64encode(audio_data).decode("utf-8")
         if base64_audio:
-            print(f"Uploading audio: {os.path.basename(file_path)}")
+            logger.info(f"Uploading audio: {os.path.basename(file_path)}")
             invoke_ankiconnect(
                 ankiconnect_url,
                 "storeMediaFile",
@@ -65,9 +69,9 @@ def upload_audio(file_path: str, ankiconnect_url: str):
                 data=base64_audio
             )
         else:
-            print(f"Warning: base64_audio is empty for {os.path.basename(file_path)}")
+            logger.warning(f"Warning: base64_audio is empty for {os.path.basename(file_path)}")
     else:
-        print(f"Warning: Audio file not found: {file_path}")
+        logger.warning(f"Warning: Audio file not found: {file_path}")
 
 def get_sentence_with_word(word):
     """
@@ -91,11 +95,11 @@ def get_sentence_with_word(word):
         if match:
             return match.group(1).strip(), match.group(2).strip(), match.group(3).strip()
         else:
-            print(text)
+            logger.info(text)
             raise Exception("Something went wrong with the setence")
 
     except Exception as e:
-        print(e)
+        logger.error(e)
         return f"Error generating sentence: {e}", None, None
     
 def get_sentence_with_word_english(word):
@@ -117,7 +121,7 @@ def get_sentence_with_word_english(word):
         return text
 
     except Exception as e:
-        print(e)
+        logger.error(e)
         return f"Error generating sentence: {e}"
     
 def get_definition(word):
@@ -138,7 +142,7 @@ def get_definition(word):
         text = response.text.strip().strip("[]")
         return text
     except Exception as e:
-        print(e)
+        logger.error(e)
         return f"Error generating sentence: {e}"
 
 async def translate_to_japanese(word):
@@ -207,10 +211,10 @@ def download_audio(text, lang, filename):
     try:
         tts = gTTS(text=text, lang=lang)
         tts.save(filename)
-        print(f"Audio saved to {filename}")
+        logger.info(f"Audio saved to {filename}")
         return True
     except Exception as e:
-        print(f"Error downloading audio {filename}: {e}")
+        logger.error(f"Error downloading audio {filename}: {e}")
         return False
 
 def japanese_to_hiragana(text: str) -> str:
@@ -229,7 +233,7 @@ def romaji_to_kana(romaji: str) -> str:
         kana_no_spaces = kana_with_spaces.replace(" ", "")
         return kana_no_spaces
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}")
         return ""
 
 
@@ -247,7 +251,7 @@ def empty_folder(folder_path):
             elif os.path.isdir(item_path):
                 shutil.rmtree(item_path)
         except Exception as e:
-            print(f"Failed to delete {item_path}. Reason: {e}")
+            logger.error(f"Failed to delete {item_path}. Reason: {e}")
 
 def addnote(ankiconnect_url, deck_name, word):
     # Ensure audios directory exists
@@ -270,19 +274,19 @@ def addnote(ankiconnect_url, deck_name, word):
         japanese_sentence, romaji_sentence, english_sentence = get_sentence_with_word(word)
 
     if not japanese_sentence or not romaji_sentence or not english_sentence:
-        print(f"Skipping note for '{word}' due to sentence generation error.")
+        logger.warning(f"Skipping note for '{word}' due to sentence generation error.")
         raise Exception("Sentences not found")
 
     kana_word = japanese_to_hiragana(translation)
     kana_sentence = romaji_to_kana(romaji_sentence)
 
-    print(f"Processing '{word}':")
-    print(f"  Japanese Translation: {translation}")
-    print(f"  Kana: {kana_word}")
-    print(f"  English: {english_word}")
-    print(f"  Japanese Sentence: {japanese_sentence}")
-    print(f"  Kana Sentence: {kana_sentence}")
-    print(f"  English Sentence: {english_sentence}")
+    logger.info(f"Processing '{word}':")
+    logger.info(f"  Japanese Translation: {translation}")
+    logger.info(f"  Kana: {kana_word}")
+    logger.info(f"  English: {english_word}")
+    logger.info(f"  Japanese Sentence: {japanese_sentence}")
+    logger.info(f"  Kana Sentence: {kana_sentence}")
+    logger.info(f"  English Sentence: {english_sentence}")
 
     # Download audio for the word
     word_audio_filename = os.path.join(audio_dir, f"{translation}.mp3")
@@ -293,12 +297,12 @@ def addnote(ankiconnect_url, deck_name, word):
     sentence_audio_success = download_audio(japanese_sentence, 'ja', sentence_audio_filename)
 
     if not word_audio_success or not sentence_audio_success:
-        print(f"Skipping note for '{word}' due to audio download error.")
+        logger.warning(f"Skipping note for '{word}' due to audio download error.")
         raise Exception("Audios not found")
 
     try:
         # Add to Anki
-        print("Uploading files...")
+        logger.info("Uploading files...")
 
         # Upload word audio
         upload_audio(word_audio_filename, ankiconnect_url)
@@ -306,7 +310,7 @@ def addnote(ankiconnect_url, deck_name, word):
         # Upload sentence audio
         upload_audio(sentence_audio_filename, ankiconnect_url)
 
-        print("Adding note to Anki...")
+        logger.info("Adding note to Anki...")
         # Add note
         note = {
             "deckName": deck_name,
@@ -321,14 +325,14 @@ def addnote(ankiconnect_url, deck_name, word):
             "tags": ["japanese_anki_generator"]
         }
         invoke_ankiconnect(ankiconnect_url, "addNote", note=note)
-        print(f"Added note for: {translation}")
+        logger.info(f"Added note for: {translation}")
         sync_ankiconnect(ankiconnect_url)
 
     except Exception as e:
-        print(f"Skipping note for '{word}' due to error: {e}")
+        logger.error(f"Skipping note for '{word}' due to error: {e}")
         raise e
     finally:
-        print("Emptying audio folder...")
+        logger.info("Emptying audio folder...")
         empty_folder(audio_dir)
         
         
@@ -350,15 +354,15 @@ def addnote_english(ankiconnect_url, deck_name, word):
     english_definition = get_definition(word)
     english_sentence = get_sentence_with_word_english(word)
     if not english_sentence or not english_definition:
-        print(f"Skipping note for '{word}' due to generation error.")
+        logger.warning(f"Skipping note for '{word}' due to generation error.")
         raise Exception("Sentence or definition not found")
     
     if ("Error generating sentence" in (english_sentence or "")) or ("Error generating sentence" in (english_definition or "")):
       raise Exception("Error generating sentence detected in definition or sentence")
 
-    print(f"Processing '{english_word}':")
-    print(f"  Definition: {english_definition}")
-    print(f"  English Sentence: {english_sentence}")
+    logger.info(f"Processing '{english_word}':")
+    logger.info(f"  Definition: {english_definition}")
+    logger.info(f"  English Sentence: {english_sentence}")
 
     # Download audio for the word
     word_audio_filename = os.path.join(audio_dir, f"{english_word}.mp3")
@@ -369,12 +373,12 @@ def addnote_english(ankiconnect_url, deck_name, word):
     sentence_audio_success = download_audio(english_sentence, 'en', sentence_audio_filename)
 
     if not word_audio_success or not sentence_audio_success:
-        print(f"Skipping note for '{word}' due to audio download error.")
+        logger.warning(f"Skipping note for '{word}' due to audio download error.")
         raise Exception("Audios not found")
 
     try:
         # Add to Anki
-        print("Uploading files...")
+        logger.info("Uploading files...")
 
         # Upload word audio
         upload_audio(word_audio_filename, ankiconnect_url)
@@ -382,7 +386,7 @@ def addnote_english(ankiconnect_url, deck_name, word):
         # Upload sentence audio
         upload_audio(sentence_audio_filename, ankiconnect_url)
 
-        print("Adding note to Anki...")
+        logger.info("Adding note to Anki...")
         # Add note
         note = {
             "deckName": deck_name,
@@ -397,12 +401,12 @@ def addnote_english(ankiconnect_url, deck_name, word):
             "tags": ["english_anki_generator"]
         }
         invoke_ankiconnect(ankiconnect_url, "addNote", note=note)
-        print(f"Added note for: {english_word}")
+        logger.info(f"Added note for: {english_word}")
         sync_ankiconnect(ankiconnect_url)
 
     except Exception as e:
-        print(f"Skipping note for '{word}' due to error: {e}")
+        logger.error(f"Skipping note for '{word}' due to error: {e}")
         raise e
     finally:
-        print("Empty audio folder")
+        logger.info("Emptying the audio folder...")
         empty_folder(audio_dir)

@@ -7,7 +7,6 @@ services:
       - "5000:5000"
     environment:
       FLASK_APP: run.py
-      FLASK_ENV: production
       SECRET_KEY: 'your-secret-key'
       GOOGLE_API_KEY: 'your-google-api-key'
       ANKICONNECT_URL: 'http://localhost:8765'

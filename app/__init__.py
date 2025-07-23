@@ -4,6 +4,10 @@ from .routes.main_routes import main
 from .routes.api_routes import api
 
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def create_app(config_name=None):
     app = Flask(__name__, instance_relative_config=True)
