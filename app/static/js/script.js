@@ -15,7 +15,7 @@ function showMessage(type, message) {
     setTimeout(() => {
         resultBox.classList.remove('success', 'error');
         resultBox.textContent = '';
-    }, 5000);
+    }, 10000);
 }
 
 dropdown.addEventListener('click', () => {
@@ -50,6 +50,9 @@ dropdown.addEventListener('keydown', (e) => {
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    resultBox.classList.remove('success', 'error');
+    resultBox.textContent = 'Loading...';
+
     const value = hiddenInput.value;
     const word = wordInput.value;
 
@@ -72,6 +75,7 @@ form.addEventListener('submit', async (e) => {
             return;
         }
         showMessage('success', result.message || 'Note added!');
+        wordInput.textContent = '';
     } catch (err) {
         console.error(err);
         showMessage('error', 'Error submitting note');
