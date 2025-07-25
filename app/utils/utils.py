@@ -270,7 +270,7 @@ def addnote(ankiconnect_url, deck_name, word):
         translation = asyncio.run(translate_to_japanese(word))
         japanese_sentence, romaji_sentence, english_sentence = get_sentence_with_word(translation)
     else:
-        english_word = asyncio.run(translate_to_english(word))
+        english_word = asyncio.run(translate_to_english(word)).lower()
         translation = word # If the word is already Japanese, use it as the translation
         japanese_sentence, romaji_sentence, english_sentence = get_sentence_with_word(word)
 
@@ -303,14 +303,6 @@ def addnote(ankiconnect_url, deck_name, word):
 
     try:
         # Add to Anki
-        logger.info("Uploading files...")
-
-        # Upload word audio
-        upload_audio(word_audio_filename, ankiconnect_url)
-
-        # Upload sentence audio
-        upload_audio(sentence_audio_filename, ankiconnect_url)
-
         logger.info("Adding note to Anki...")
         # Add note
         note = {
@@ -318,7 +310,7 @@ def addnote(ankiconnect_url, deck_name, word):
             "modelName": "Basic",
             "fields": {
                 "Front": f"<span style=\"font-size: 60px;\">{translation}</span><br>[sound:{os.path.basename(word_audio_filename)}]<br>{kana_word}",
-                "Back": f"<span style=\"font-size: 40px;\">{english_word}</span><br>{japanese_sentence}<br>{kana_sentence}<br>{english_sentence}<br>[sound:{os.path.basename(sentence_audio_filename)}]",
+                "Back": f"<span style=\"font-size: 40px;\">{english_word}</span><br><span style=\"font-size: 30px;\">{japanese_sentence}</span><br>{kana_sentence}<br>{english_sentence}<br>[sound:{os.path.basename(sentence_audio_filename)}]",
             },
             "options": {
                 "allowDuplicate": False
@@ -326,7 +318,18 @@ def addnote(ankiconnect_url, deck_name, word):
             "tags": ["japanese_anki_generator"]
         }
         invoke_ankiconnect(ankiconnect_url, "addNote", note=note)
+        
         logger.info(f"Added note for: {translation}")
+        
+        logger.info("Uploading files...")
+
+        # Upload word audio
+        upload_audio(word_audio_filename, ankiconnect_url)
+
+        # Upload sentence audio
+        upload_audio(sentence_audio_filename, ankiconnect_url)
+        
+        # Sync
         sync_ankiconnect(ankiconnect_url)
 
     except Exception as e:
@@ -348,7 +351,7 @@ def addnote_english(ankiconnect_url, deck_name, word):
     language = identify_language(word)
     english_word = ""
     if language == "Japanese":
-        english_word = asyncio.run(translate_to_english(word))
+        english_word = asyncio.run(translate_to_english(word)).lower()
     else:
         english_word = word
 
@@ -379,14 +382,6 @@ def addnote_english(ankiconnect_url, deck_name, word):
 
     try:
         # Add to Anki
-        logger.info("Uploading files...")
-
-        # Upload word audio
-        upload_audio(word_audio_filename, ankiconnect_url)
-
-        # Upload sentence audio
-        upload_audio(sentence_audio_filename, ankiconnect_url)
-
         logger.info("Adding note to Anki...")
         # Add note
         note = {
@@ -402,7 +397,18 @@ def addnote_english(ankiconnect_url, deck_name, word):
             "tags": ["english_anki_generator"]
         }
         invoke_ankiconnect(ankiconnect_url, "addNote", note=note)
+
         logger.info(f"Added note for: {english_word}")
+        
+        logger.info("Uploading files...")
+
+        # Upload word audio
+        upload_audio(word_audio_filename, ankiconnect_url)
+
+        # Upload sentence audio
+        upload_audio(sentence_audio_filename, ankiconnect_url)
+        
+        # Sync
         sync_ankiconnect(ankiconnect_url)
 
     except Exception as e:
