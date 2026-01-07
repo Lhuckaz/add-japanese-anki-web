@@ -86,7 +86,7 @@ def get_sentence_with_word(word):
     try:
         client = genai.Client()
         response = client.models.generate_content(
-            model='gemini-2.0-flash-001', contents=f"Write a simple sentence in Japanese using the word '{word}'. Format: [Japanese sentence] ([Romaji]) - [English translation]"
+            model='gemini-2.5-flash-lite', contents=f"Write EXACTLY ONE simple sentence in Japanese using the word '{word}'. Format: [Japanese sentence] ([Romaji]) - [English translation] but without []"
         )
         text = response.text.strip()
         
@@ -115,7 +115,7 @@ def get_sentence_with_word_english(word):
     try:
         client = genai.Client()
         response = client.models.generate_content(
-            model='gemini-2.0-flash-001', contents=f"Write a simple sentence using the word '{word}'. Format: [English setence]"
+            model='gemini-2.5-flash-lite', contents=f"Write a simple sentence using the word '{word}'. Format: [English setence]"
         )
         text = response.text.strip().strip("[]")
         return text
@@ -137,7 +137,7 @@ def get_definition(word):
     try:
         client = genai.Client()
         response = client.models.generate_content(
-            model='gemini-2.0-flash-001', contents=f"Give a short definition of the word '{word}'. Format: [English definition]"
+            model='gemini-2.5-flash-lite', contents=f"Give a short definition of the word '{word}'. Format: [English definition]"
         )
         text = response.text.strip().strip("[]")
         return text
