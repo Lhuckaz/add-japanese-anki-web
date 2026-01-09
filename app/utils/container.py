@@ -67,7 +67,7 @@ def handle_container():
         if status == "exited" or status == "created":
             start_container(token)
             logger.info(f"Waiting...")
-            time.sleep(5)
+            time.sleep(10)
         elif status == "running":
             logger.info(f"Container '{CONTAINER_ID}' is already running.")
         else:
