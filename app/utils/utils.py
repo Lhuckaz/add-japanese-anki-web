@@ -1,15 +1,15 @@
 import asyncio
 import base64
+import logging
 import os
 import re
 import shutil
-import requests
-import logging
 
-from google import genai
-from gtts import gTTS
-from googletrans import Translator
 import pykakasi
+import requests
+from google import genai
+from googletrans import Translator
+from gtts import gTTS
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -217,7 +217,7 @@ def identify_language(word):
         return "English"
 
     except:
-        logger.error(f"Language not identified")
+        logger.error("Language not identified")
         return "Language not identified"
 
 
