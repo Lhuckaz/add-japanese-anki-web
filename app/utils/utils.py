@@ -407,6 +407,9 @@ def addnote_english(ankiconnect_url, deck_name, word):
         raise Exception("Audios not found")
 
     try:
+        # Sync
+        sync_ankiconnect(ankiconnect_url)
+
         # Add to Anki
         logger.info("Adding note to Anki...")
         # Add note
