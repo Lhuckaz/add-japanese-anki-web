@@ -14,6 +14,8 @@ from gtts import gTTS
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
+
 
 def invoke_ankiconnect(ankiconnect_url, action, **params):
     payload = {"action": action, "version": 6, "params": params}
@@ -89,7 +91,7 @@ def get_sentence_with_word(word):
     try:
         client = genai.Client()
         response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
+            model=GEMINI_MODEL,
             contents=f"Write EXACTLY ONE simple sentence in Japanese using the word '{word}'. Format: [Japanese sentence] ([Romaji]) - [English translation] but without []",
         )
         text = response.text.strip()
@@ -124,7 +126,7 @@ def get_sentence_with_word_english(word):
     try:
         client = genai.Client()
         response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
+            model=GEMINI_MODEL,
             contents=f"Write a simple sentence using the word '{word}'. Format: [English setence]",
         )
         text = response.text.strip().strip("[]")
@@ -148,7 +150,7 @@ def get_definition(word):
     try:
         client = genai.Client()
         response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
+            model=GEMINI_MODEL,
             contents=f"Give a short definition of the word '{word}'. Format: [English definition]",
         )
         text = response.text.strip().strip("[]")

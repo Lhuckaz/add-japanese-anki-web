@@ -9,6 +9,7 @@ services:
       FLASK_APP: run.py
       SECRET_KEY: 'your-secret-key'
       GOOGLE_API_KEY: 'your-google-api-key'
+      GEMINI_MODEL: '${GEMINI_MODEL:-gemini-2.5-flash}'
       ANKICONNECT_URL: 'http://localhost:8765'
       HANDLE_CONTAINER: true
       PORTAINER_URL: 'http://localhost:9000'
