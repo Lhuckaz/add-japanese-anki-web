@@ -14,7 +14,7 @@ from gtts import gTTS
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite").strip() or "gemini-3.1-flash-lite"
 
 
 def invoke_ankiconnect(ankiconnect_url, action, **params):

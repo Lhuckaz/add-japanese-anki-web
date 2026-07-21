@@ -60,7 +60,7 @@ A `docker-compose.yml` file is provided for convenience.
     FLASK_ENV=production
     SECRET_KEY='your-secret-key'
     GOOGLE_API_KEY='your-google-api-key'
-    GEMINI_MODEL='gemini-2.5-flash'
+    GEMINI_MODEL='gemini-3.1-flash-lite'
     ANKICONNECT_URL='http://localhost:8765'
 
     # --- Optional: For Portainer Integration ---
@@ -89,7 +89,7 @@ docker run -d -p 5000:5000 \
   -e FLASK_ENV=production \
   -e SECRET_KEY='your-secret-key' \
   -e GOOGLE_API_KEY='your-google-api-key' \
-  -e GEMINI_MODEL='gemini-2.5-flash' \
+  -e GEMINI_MODEL='gemini-3.1-flash-lite' \
   -e ANKICONNECT_URL='http://localhost:8765' \
   # Optional
   -e HANDLE_CONTAINER=true \
@@ -105,7 +105,7 @@ docker run -d -p 5000:5000 \
 
 -   `SECRET_KEY`: A secret key for Flask sessions.
 -   `GOOGLE_API_KEY`: Your API key for Google Gemini.
--   `GEMINI_MODEL`: Gemini model used for sentence and definition generation. Defaults to `gemini-2.5-flash` when unset or empty.
+-   `GEMINI_MODEL`: Gemini model used for sentence and definition generation. Defaults to `gemini-3.1-flash-lite` when unset or empty.
 -   `ANKICONNECT_URL`: The full URL to your AnkiConnect instance (e.g., `http://localhost:8765`).
 
 Optional:
