@@ -10,6 +10,8 @@ services:
       SECRET_KEY: 'your-secret-key'
       GOOGLE_API_KEY: 'your-google-api-key'
       GEMINI_MODEL: '${GEMINI_MODEL:-gemini-3.1-flash-lite}'
+      GEMINI_MAX_RETRIES: '${GEMINI_MAX_RETRIES:-3}'
+      GEMINI_RETRY_BASE_DELAY_SECONDS: '${GEMINI_RETRY_BASE_DELAY_SECONDS:-1}'
       ANKICONNECT_URL: 'http://localhost:8765'
       HANDLE_CONTAINER: true
       PORTAINER_URL: 'http://localhost:9000'

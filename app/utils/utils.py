@@ -2,8 +2,10 @@ import asyncio
 import base64
 import logging
 import os
+import random
 import re
 import shutil
+import time
 
 import pykakasi
 import requests
@@ -15,6 +17,103 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite").strip() or "gemini-3.1-flash-lite"
+
+
+def _positive_int_env(name, default):
+    try:
+        value = int(os.getenv(name, default))
+        if value >= 0:
+            return value
+    except (TypeError, ValueError):
+        pass
+    logger.warning("Invalid %s value; using %s.", name, default)
+    return default
+
+
+def _positive_float_env(name, default):
+    try:
+        value = float(os.getenv(name, default))
+        if value > 0:
+            return value
+    except (TypeError, ValueError):
+        pass
+    logger.warning("Invalid %s value; using %s.", name, default)
+    return default
+
+
+# GEMINI_MAX_RETRIES is the number of retries after the initial request.
+GEMINI_MAX_RETRIES = _positive_int_env("GEMINI_MAX_RETRIES", 3)
+# The delay doubles after each retry: base, base * 2, base * 4, ...
+GEMINI_RETRY_BASE_DELAY_SECONDS = _positive_float_env(
+    "GEMINI_RETRY_BASE_DELAY_SECONDS", 1.0
+)
+RETRYABLE_GEMINI_STATUS_CODES = {429, 500, 502, 503, 504}
+
+
+class GeminiServiceUnavailableError(Exception):
+    """Raised when Gemini remains unavailable after all configured retries."""
+
+
+def _gemini_status_code(error):
+    """Return a HTTP status code from Google SDK exceptions when available."""
+    for attribute in ("code", "status_code", "status"):
+        value = getattr(error, attribute, None)
+        if value is None:
+            continue
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            match = re.search(r"\b(429|500|502|503|504)\b", str(value))
+            if match:
+                return int(match.group(1))
+
+    match = re.search(r"\b(429|500|502|503|504)\b", str(error))
+    return int(match.group(1)) if match else None
+
+
+def generate_gemini_content(prompt):
+    """Generate content, retrying only temporary Gemini/API availability failures."""
+    client = genai.Client()
+    total_attempts = GEMINI_MAX_RETRIES + 1
+
+    for attempt in range(1, total_attempts + 1):
+        try:
+            response = client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+            )
+            return response.text.strip()
+        except Exception as error:
+            status_code = _gemini_status_code(error)
+            retryable = status_code in RETRYABLE_GEMINI_STATUS_CODES
+
+            logger.warning(
+                "Gemini request attempt %d/%d failed with status %s: %s",
+                attempt,
+                total_attempts,
+                status_code if status_code is not None else "unknown",
+                error,
+            )
+
+            if not retryable:
+                raise
+
+            if attempt == total_attempts:
+                raise GeminiServiceUnavailableError(
+                    "Gemini is temporarily unavailable after "
+                    f"{total_attempts} attempts (last status: {status_code})."
+                ) from error
+
+            delay = GEMINI_RETRY_BASE_DELAY_SECONDS * (2 ** (attempt - 1))
+            # A small jitter prevents concurrent requests from retrying together.
+            delay += random.uniform(0, min(0.5, delay * 0.2))
+            logger.info(
+                "Retrying Gemini after %.2f seconds (next attempt %d/%d).",
+                delay,
+                attempt + 1,
+                total_attempts,
+            )
+            time.sleep(delay)
 
 
 def invoke_ankiconnect(ankiconnect_url, action, **params):
@@ -88,29 +187,22 @@ def get_sentence_with_word(word):
     Returns:
       A tuple containing the Japanese sentence, Romaji, and English translation.
     """
-    try:
-        client = genai.Client()
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=f"Write EXACTLY ONE simple sentence in Japanese using the word '{word}'. Format: [Japanese sentence] ([Romaji]) - [English translation] but without []",
+    text = generate_gemini_content(
+        f"Write EXACTLY ONE simple sentence in Japanese using the word '{word}'. "
+        "Format: [Japanese sentence] ([Romaji]) - [English translation] but without []"
+    )
+
+    # Use regex to parse the sentence.
+    match = re.match(r"^(.*?)\s*\((.*?)\)\s*-\s*(.*)$", text)
+    if match:
+        return (
+            match.group(1).strip(),
+            match.group(2).strip(),
+            match.group(3).strip(),
         )
-        text = response.text.strip()
 
-        # Use regex to parse the sentence
-        match = re.match(r"^(.*?)\s*\((.*?)\)\s*-\s*(.*)$", text)
-        if match:
-            return (
-                match.group(1).strip(),
-                match.group(2).strip(),
-                match.group(3).strip(),
-            )
-        else:
-            logger.info(text)
-            raise Exception("Something went wrong with the setence")
-
-    except Exception as e:
-        logger.error(e)
-        return f"Error generating sentence: {e}", None, None
+    logger.info(text)
+    raise ValueError("Gemini returned a sentence in an unexpected format")
 
 
 def get_sentence_with_word_english(word):
@@ -123,18 +215,9 @@ def get_sentence_with_word_english(word):
     Returns:
       A setence with the word.
     """
-    try:
-        client = genai.Client()
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=f"Write a simple sentence using the word '{word}'. Format: [English setence]",
-        )
-        text = response.text.strip().strip("[]")
-        return text
-
-    except Exception as e:
-        logger.error(e)
-        return f"Error generating sentence: {e}"
+    return generate_gemini_content(
+        f"Write a simple sentence using the word '{word}'. Format: [English setence]"
+    ).strip("[]")
 
 
 def get_definition(word):
@@ -147,17 +230,9 @@ def get_definition(word):
     Returns:
       A definition of the word.
     """
-    try:
-        client = genai.Client()
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=f"Give a short definition of the word '{word}'. Format: [English definition]",
-        )
-        text = response.text.strip().strip("[]")
-        return text
-    except Exception as e:
-        logger.error(e)
-        return f"Error generating sentence: {e}"
+    return generate_gemini_content(
+        f"Give a short definition of the word '{word}'. Format: [English definition]"
+    ).strip("[]")
 
 
 async def translate_to_japanese(word):
@@ -384,11 +459,6 @@ def addnote_english(ankiconnect_url, deck_name, word):
     if not english_sentence or not english_definition:
         logger.warning(f"Skipping note for '{word}' due to generation error.")
         raise Exception("Sentence or definition not found")
-
-    if ("Error generating sentence" in (english_sentence or "")) or (
-        "Error generating sentence" in (english_definition or "")
-    ):
-        raise Exception("Error generating sentence detected in definition or sentence")
 
     logger.info(f"Processing '{english_word}':")
     logger.info(f"  Definition: {english_definition}")

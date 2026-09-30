@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 import os
 import logging
+from app.utils.utils import GeminiServiceUnavailableError
 from app.utils.utils import addnote as add_anki_note
 from app.utils.utils import addnote_english as add_anki_note_english
 from app.utils.container import handle_container
@@ -44,5 +45,9 @@ def addnote():
             "word": word,
             "value": dropdown_value
       }), 200
+  except GeminiServiceUnavailableError as e:
+    logger.warning("Gemini unavailable while adding '%s': %s", word, e)
+    return jsonify({"error": "AI service is busy. Please try again shortly."}), 503
   except Exception as e:
+    logger.exception("Failed to add note for '%s'", word)
     return jsonify({"error": str(e)}), 500

@@ -61,6 +61,8 @@ A `docker-compose.yml` file is provided for convenience.
     SECRET_KEY='your-secret-key'
     GOOGLE_API_KEY='your-google-api-key'
     GEMINI_MODEL='gemini-3.1-flash-lite'
+    GEMINI_MAX_RETRIES=3
+    GEMINI_RETRY_BASE_DELAY_SECONDS=1
     ANKICONNECT_URL='http://localhost:8765'
 
     # --- Optional: For Portainer Integration ---
@@ -90,6 +92,8 @@ docker run -d -p 5000:5000 \
   -e SECRET_KEY='your-secret-key' \
   -e GOOGLE_API_KEY='your-google-api-key' \
   -e GEMINI_MODEL='gemini-3.1-flash-lite' \
+  -e GEMINI_MAX_RETRIES=3 \
+  -e GEMINI_RETRY_BASE_DELAY_SECONDS=1 \
   -e ANKICONNECT_URL='http://localhost:8765' \
   # Optional
   -e HANDLE_CONTAINER=true \
@@ -106,6 +110,8 @@ docker run -d -p 5000:5000 \
 -   `SECRET_KEY`: A secret key for Flask sessions.
 -   `GOOGLE_API_KEY`: Your API key for Google Gemini.
 -   `GEMINI_MODEL`: Gemini model used for sentence and definition generation. Defaults to `gemini-3.1-flash-lite` when unset or empty.
+-   `GEMINI_MAX_RETRIES`: Number of Gemini retries after the first attempt for transient API errors (`429`, `500`, `502`, `503`, `504`). Defaults to `3`.
+-   `GEMINI_RETRY_BASE_DELAY_SECONDS`: Initial retry delay in seconds; each later delay doubles, with a small random jitter. Defaults to `1`.
 -   `ANKICONNECT_URL`: The full URL to your AnkiConnect instance (e.g., `http://localhost:8765`).
 
 Optional:
