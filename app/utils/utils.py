@@ -411,6 +411,10 @@ def addnote(ankiconnect_url, deck_name, word):
         raise Exception("Audios not found")
 
     try:
+        # Sync before adding so duplicate checks and writes use the latest deck state.
+        logger.info("Syncing Anki before adding note...")
+        sync_ankiconnect(ankiconnect_url)
+
         # Add to Anki
         logger.info("Adding note to Anki...")
         # Add note
@@ -436,7 +440,8 @@ def addnote(ankiconnect_url, deck_name, word):
         # Upload sentence audio
         upload_audio(sentence_audio_filename, ankiconnect_url)
 
-        # Sync
+        # Sync after adding the note and its media files.
+        logger.info("Syncing Anki after adding note...")
         sync_ankiconnect(ankiconnect_url)
 
     except Exception as e:
@@ -487,7 +492,8 @@ def addnote_english(ankiconnect_url, deck_name, word):
         raise Exception("Audios not found")
 
     try:
-        # Sync
+        # Sync before adding so duplicate checks and writes use the latest deck state.
+        logger.info("Syncing Anki before adding note...")
         sync_ankiconnect(ankiconnect_url)
 
         # Add to Anki
@@ -515,7 +521,8 @@ def addnote_english(ankiconnect_url, deck_name, word):
         # Upload sentence audio
         upload_audio(sentence_audio_filename, ankiconnect_url)
 
-        # Sync
+        # Sync after adding the note and its media files.
+        logger.info("Syncing Anki after adding note...")
         sync_ankiconnect(ankiconnect_url)
 
     except Exception as e:
