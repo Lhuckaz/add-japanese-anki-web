@@ -10,6 +10,7 @@ import time
 import pykakasi
 import requests
 from google import genai
+from google.genai import types
 from googletrans import Translator
 from gtts import gTTS
 
@@ -81,6 +82,11 @@ def generate_gemini_content(prompt):
             response = client.models.generate_content(
                 model=GEMINI_MODEL,
                 contents=prompt,
+                config=types.GenerateContentConfig(
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                        disable=True
+                    )
+                ),
             )
             return response.text.strip()
         except Exception as error:
