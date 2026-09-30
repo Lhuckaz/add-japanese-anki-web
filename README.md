@@ -23,7 +23,7 @@ The application exposes a simple API endpoint (`/api/addnote`) that takes a word
 2.  **Translation:** If the word is in English, it's translated to Japanese.
 3.  **Content Generation:** Google Gemini generates a simple Japanese example sentence using the word.
 4.  **Furigana/Kana:** The application generates Hiragana for the main word and Kana for the example sentence.
-5.  **Audio:** gTTS creates audio files for both the Japanese word and the example sentence.
+5.  **Audio:** gTTS creates audio files for both the Japanese word and the example sentence. Word audio uses the generated hiragana reading, which avoids ambiguous kanji pronunciations (for example, 黒板 is spoken as こくばん).
 6.  **Anki Card Creation:** A new "Basic" note is created with:
     -   **Front:** Japanese word (large font), audio, and Hiragana.
     -   **Back:** English translation, the full Japanese example sentence, the Kana version of the sentence, the English translation of the sentence, and the sentence audio.

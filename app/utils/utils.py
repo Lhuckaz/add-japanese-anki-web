@@ -394,9 +394,11 @@ def addnote(ankiconnect_url, deck_name, word):
     logger.info(f"  Kana Sentence: {kana_sentence}")
     logger.info(f"  English Sentence: {english_sentence}")
 
-    # Download audio for the word
+    # Speak the hiragana reading instead of the kanji. Japanese TTS can choose
+    # an unintended reading for ambiguous compounds (for example, 黒板 may be
+    # read as "kuroita" rather than "kokuban" when sent as kanji).
     word_audio_filename = os.path.join(audio_dir, f"{translation}.mp3")
-    word_audio_success = download_audio(translation, "ja", word_audio_filename)
+    word_audio_success = download_audio(kana_word, "ja", word_audio_filename)
 
     # Download audio for the sentence
     sentence_audio_filename = os.path.join(audio_dir, f"{translation}_sentence.mp3")
